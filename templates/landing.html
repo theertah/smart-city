@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Smart City — Welcome</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<style>
+  @font-face {
+    font-family: 'Talina DEMO';
+    src: url("{{ url_for('static', filename='fonts/Talina DEMO.otf') }}") format('opentype');
+    font-weight: normal;
+    font-style: normal;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    text-align: center;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url("{{ url_for('static', filename='images/bangalore_bg.jpg') }}");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: white;
+    margin: 0;
+    font-family: 'Space Mono', monospace;
+  }
+  .bangalore-title {
+    font-family: 'Talina DEMO', sans-serif;
+    font-size: 10rem;
+    font-weight: normal;
+    letter-spacing: 5px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .landing-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 500;
+    margin-bottom: 48px;
+    letter-spacing: 1px;
+    color: #e2e8f0;
+  }
+  .landing-buttons {
+    display: flex;
+    gap: 24px;
+  }
+  .landing-button {
+    padding: 16px 40px;
+    font-size: 1.1rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    text-decoration: none;
+    color: white;
+    background-color: #2563eb;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  .landing-button:hover {
+    background-color: #1d4ed8;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+  .clock {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    font-family: 'Space Mono';
+    opacity: 0.9;
+  }
+</style>
+</head>
+<body>
+  <div id="landing-clock" class="clock"></div>
+  <div class="bangalore-title">BENGALURU</div>
+  <div class="landing-subtitle">Smart City Platform</div>
+  
+  <div class="landing-buttons">
+    <a href="/citizen" class="landing-button">Citizen Portal</a>
+    <a href="/admin" class="landing-button">Admin Dashboard</a>
+  </div>
+
+  <script>
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('landing-clock').textContent = now.toLocaleTimeString('en-IN');
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
+</body>
+</html>

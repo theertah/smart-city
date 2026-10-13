@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Smart City — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot/chatbot.css') }}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+</head>
+<body>
+  <header>
+    <h1>AI Smart City Dashboard</h1>
+    <div>
+        <a href="/" class="header-link">Home</a>
+        <a href="/citizen" class="header-link">Citizen Portal</a>
+        <span id="clock"></span>
+    </div>
+  </header>
+
+  <nav>
+    <button data-tab="overview" class="active">Overview</button>
+    <button data-tab="waste">Waste</button>
+    <button data-tab="complaints">Complaints</button>
+    <button data-tab="assistant">Assistant</button>
+  </nav>
+
+  <main>
+    <section id="tab-overview" class="tab active">
+      <section class="map-panel" aria-labelledby="mapTitle">
+        <div class="map-heading">
+          <div>
+            <h2 id="mapTitle">Bengaluru traffic</h2>
+            <p id="trafficMapStatus" role="status">Loading traffic zones...</p>
+          </div>
+          <a class="map-link" href="https://www.google.com/maps/@12.9716,77.5946,12z/data=!5m1!1e1" target="_blank" rel="noopener noreferrer">Open live traffic in Google Maps</a>
+        </div>
+        <div id="trafficMap" aria-label="Interactive map of Bengaluru traffic zones"></div>
+        <div class="map-legend" aria-label="Traffic congestion legend">
+          <span><i class="legend-dot low"></i>Low</span>
+          <span><i class="legend-dot moderate"></i>Moderate</span>
+          <span><i class="legend-dot heavy"></i>Heavy</span>
+          <span class="map-note">Zone readings refresh every 6 seconds; readings are simulated.</span>
+        </div>
+      </section>
+      <h2>City Brain — active alerts</h2>
+      <div id="alerts"></div>
+      <h2>Zones</h2>
+      <table id="zoneTable">
+        <thead><tr><th>Area / zone</th><th>Congestion</th><th>AQI</th><th>Waste</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section id="tab-waste" class="tab">
+      <h2>Waste</h2>
+      <table id="wasteTable">
+        <thead><tr><th>Area / zone</th><th>Current fill</th><th>Predicted (+5h)</th><th>Model</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section id="tab-complaints" class="tab">
+      <h2>File a complaint</h2>
+      <textarea id="complaintText" placeholder="Describe the issue..."></textarea>
+      <select id="complaintZone" required><option value="">Loading Bengaluru areas...</option></select>
+      <button id="submitComplaint">Submit</button>
+      <div class="complaint-actions">
+        <h2>Queue (by priority)</h2>
+        <button id="deleteSelectedComplaints" type="button" disabled>Delete selected</button>
+      </div>
+      <p id="complaintMessage" role="status" aria-live="polite"></p>
+      <table id="complaintsTable">
+        <thead><tr><th><input type="checkbox" id="selectAllComplaints" aria-label="Select all complaints"></th><th>Category</th><th>Area</th><th>Dept</th><th>Priority</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section id="tab-assistant" class="tab">
+      {% include "chatbot/panel.html" %}
+    </section>
+  </main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="{{ url_for('static', filename='js/map/map.js') }}"></script>
+<script src="{{ url_for('static', filename='js/features/utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/features/overview.js') }}"></script>
+<script src="{{ url_for('static', filename='js/features/traffic.js') }}"></script>
+<script src="{{ url_for('static', filename='js/features/environment.js') }}"></script>
+<script src="{{ url_for('static', filename='js/features/waste.js') }}"></script>
+<script src="{{ url_for('static', filename='js/features/complaints.js') }}"></script>
+<script src="{{ url_for('static', filename='js/features/theme.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chatbot/chatbot.js') }}"></script>
+</body>
+</html>

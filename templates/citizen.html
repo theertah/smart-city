@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Smart City — Citizen Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot/chatbot.css') }}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+</head>
+<body>
+  <header>
+    <h1>Citizen Portal</h1>
+    <div>
+        <a href="/" class="header-link">Home</a>
+        <a href="/admin" class="header-link">Admin Dashboard</a>
+        <span id="clock"></span>
+    </div>
+  </header>
+
+  <nav>
+    <button data-tab="overview" class="active">Overview</button>
+    <button data-tab="traffic">Traffic</button>
+    <button data-tab="environment">Environment</button>
+    <button data-tab="complaints">File Complaint</button>
+    <button data-tab="assistant">AI Assistant</button>
+  </nav>
+
+  <main>
+    <section id="tab-overview" class="tab active">
+      <section class="map-panel" aria-labelledby="mapTitle">
+        <div class="map-heading">
+          <div>
+            <h2 id="mapTitle">Bengaluru traffic</h2>
+            <p id="trafficMapStatus" role="status">Loading traffic zones...</p>
+          </div>
+          <a class="map-link" href="https://www.google.com/maps/@12.9716,77.5946,12z/data=!5m1!1e1" target="_blank" rel="noopener noreferrer">Open live traffic in Google Maps</a>
+        </div>
+        <div id="trafficMap" aria-label="Interactive map of Bengaluru traffic zones"></div>
+        <div class="map-legend" aria-label="Traffic congestion legend">
+          <span><i class="legend-dot low"></i>Low</span>
+          <span><i class="legend-dot moderate"></i>Moderate</span>
+          <span><i class="legend-dot heavy"></i>Heavy</span>
+          <span class="map-note">Zone readings refresh every 6 seconds; readings are simulated.</span>
+        </div>
+      </section>
+
+      <h2>City Overview</h2>
+      <table id="zoneTable">
+        <thead><tr><th>Area / zone</th><th>Congestion</th><th>AQI</th><th>Waste</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section id="tab-traffic" class="tab">
+      <h2>Traffic</h2>
+      <table id="trafficTable">
+        <thead><tr><th>Area / zone</th><th>Vehicles</th><th>Avg speed</th><th>Congestion</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <h2>30-minute prediction</h2>
+      <table id="predictionTable">
+        <thead><tr><th>Area / zone</th><th>Now</th><th>Predicted</th><th>Confidence</th><th>Model</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section id="tab-environment" class="tab">
+      <h2>Environment</h2>
+      <p>Temperature, Humidity, and AQI are live from <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>. Noise is simulated.</p>
+      <h3>Live Weather (Bengaluru)</h3>
+      <div id="weatherInfo" class="weather-panel">
+         <p>Loading weather data...</p>
+      </div>
+      <table id="envTable">
+        <thead><tr><th>Area / zone</th><th>Live temp</th><th>Humidity</th><th>AQI</th><th>Noise</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section id="tab-complaints" class="tab">
+      <h2>File a complaint</h2>
+      <textarea id="complaintText" placeholder="Describe the issue (e.g., pothole on main street, broken streetlight)..."></textarea>
+      <select id="complaintZone" required><option value="">Loading Bengaluru areas...</option></select>
+      <button id="submitComplaint">Submit</button>
+      <p id="complaintMessage" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="tab-assistant" class="tab">
+      {% include "chatbot/panel.html" %}
+    </section>
+  </main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="{{ url_for('static', filename='js/map/map.js') }}"></script>
+<script src="{{ url_for('static', filename='js/features/utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/features/overview.js') }}"></script>
+<script src="{{ url_for('static', filename='js/features/traffic.js') }}"></script>
+<script src="{{ url_for('static', filename='js/features/environment.js') }}"></script>
+<script src="{{ url_for('static', filename='js/features/waste.js') }}"></script>
+<script src="{{ url_for('static', filename='js/features/complaints.js') }}"></script>
+<script src="{{ url_for('static', filename='js/features/theme.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chatbot/chatbot.js') }}"></script>
+<script>
+  // Fetch live weather data
+  fetch('/api/weather')
+    .then(res => res.json())
+    .then(data => {
+       const weatherDiv = document.getElementById('weatherInfo');
+       if (data.error) {
+           weatherDiv.innerHTML = `<p style="color:red;">Error loading weather: ${data.error}</p>`;
+       } else {
+           // Create date from the IST timestamp string
+           const time = new Date(data.time).toLocaleString('en-IN');
+           const dayOrNight = data.is_day ? 'Day' : 'Night';
+           // Noise cannot be realistically fetched via weather API, so we provide a simulated real-time range
+           const simulatedNoise = (Math.random() * (85 - 60) + 60).toFixed(1); 
+           const forecast = (data.forecast || []).filter(point => point.temperature !== null && point.temperature !== undefined && Number.isFinite(Number(point.temperature)));
+           let chartMarkup = '<p class="weather-chart-empty">Hourly forecast is unavailable right now.</p>';
+
+           if (forecast.length > 1) {
+             const width = 720;
+             const chartTop = 30;
+             const chartBottom = 180;
+             const temperatures = forecast.map(point => Number(point.temperature));
+             const minimum = Math.floor(Math.min(...temperatures) - 2);
+             const maximum = Math.ceil(Math.max(...temperatures) + 2);
+             const temperatureRange = Math.max(maximum - minimum, 1);
+             const xFor = index => 54 + index * (640 / (forecast.length - 1));
+             const yFor = temperature => chartBottom - ((temperature - minimum) / temperatureRange) * (chartBottom - chartTop);
+             const points = forecast.map((point, index) => `${xFor(index)},${yFor(Number(point.temperature))}`);
+             const linePath = points.map((point, index) => `${index ? 'L' : 'M'} ${point}`).join(' ');
+             const areaPath = `${linePath} L ${xFor(forecast.length - 1)},${chartBottom} L ${xFor(0)},${chartBottom} Z`;
+             const hourLabel = value => {
+               const hour = Number(value.slice(11, 13));
+               return `${hour % 12 || 12}${hour < 12 ? ' AM' : ' PM'}`;
+             };
+             const labels = forecast.map((point, index) => index % 3 === 0 || index === forecast.length - 1
+               ? `<g class="forecast-label"><text x="${xFor(index)}" y="${yFor(Number(point.temperature)) - 14}" text-anchor="middle">${Math.round(Number(point.temperature))}°</text><text x="${xFor(index)}" y="218" text-anchor="middle">${hourLabel(point.time)}</text></g>`
+               : '').join('');
+             const dots = forecast.map((point, index) => `<circle class="forecast-dot" cx="${xFor(index)}" cy="${yFor(Number(point.temperature))}" r="${index % 3 === 0 ? 4 : 2.5}"/>`).join('');
+             const grid = [0, 1, 2].map(step => {
+               const y = chartTop + step * ((chartBottom - chartTop) / 2);
+               const value = Math.round(maximum - step * (temperatureRange / 2));
+               return `<line class="forecast-grid" x1="44" y1="${y}" x2="710" y2="${y}"/><text class="forecast-axis-label" x="36" y="${y + 4}" text-anchor="end">${value}°</text>`;
+             }).join('');
+
+             chartMarkup = `
+               <div class="weather-chart-scroll">
+                 <svg class="weather-chart" viewBox="0 0 ${width} 240" role="img" aria-label="Predicted hourly temperatures from morning to night">
+                   <defs><linearGradient id="weatherArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="var(--weather-line)" stop-opacity="0.24"/><stop offset="100%" stop-color="var(--weather-line)" stop-opacity="0.01"/></linearGradient></defs>
+                   ${grid}
+                   <path class="forecast-area" d="${areaPath}"/>
+                   <path class="forecast-line" d="${linePath}"/>
+                   ${dots}
+                   ${labels}
+                 </svg>
+               </div>`;
+           }
+
+           weatherDiv.innerHTML = `
+              <div class="weather-current">
+                <div>
+                  <p><strong>Temperature:</strong> ${data.temperature}°C</p>
+                  <p><strong>Windspeed:</strong> ${data.windspeed} km/h</p>
+                  <p><strong>Time:</strong> ${time} (${dayOrNight})</p>
+                </div>
+                <div>
+                  <p><strong>Humidity:</strong> ${data.humidity}%</p>
+                  <p><strong>AQI (European):</strong> ${data.aqi}</p>
+                  <p><strong>Avg Noise:</strong> ${simulatedNoise} dB</p>
+                </div>
+              </div>
+              <div class="weather-chart-heading"><h3>Today's hourly forecast</h3><span>Predicted temperature</span></div>
+              ${chartMarkup}
+           `;
+       }
+    })
+    .catch(err => console.error('Weather fetch error:', err));
+</script>
+</body>
+</html>
